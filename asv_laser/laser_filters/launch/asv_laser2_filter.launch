@@ -1,0 +1,7 @@
+<launch>
+<node pkg="laser_filters" type="asv_laser2_filter" output="screen" name="asv_laser2_filter_node">
+      <remap from="scan" to="scan2" />
+      <rosparam command="load" file="$(find laser_filters)/launch/asv_laser2_filter.yaml" />
+</node>
+</launch>
+

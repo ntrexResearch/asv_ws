@@ -1,0 +1,4 @@
+<launch>
+	<include file="$(find asv_mw)/launch/asv_dcu.launch"/>
+	<include file="$(find rplidar_ros)/launch/asv_lds.launch"/>
+</launch>

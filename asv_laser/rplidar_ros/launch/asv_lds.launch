@@ -1,0 +1,20 @@
+<launch>
+  <node name="rplidarNode1"          pkg="rplidar_ros"  type="rplidarNode1" output="screen">
+  <param name="serial_port"         type="string" value="/dev/Lidar1"/>
+  <param name="serial_baudrate"     type="int"    value="115200"/><!--A1/A2 -->
+  <!--param name="serial_baudrate"     type="int"    value="256000"--><!--A3 -->
+  <param name="frame_id"            type="string" value="base_scan"/>
+  <param name="inverted"            type="bool"   value="false"/>
+  <param name="angle_compensate"    type="bool"   value="true"/>
+  </node>
+
+
+  <node name="rplidarNode2"          pkg="rplidar_ros"  type="rplidarNode2" output="screen">
+  <param name="serial_port"         type="string" value="/dev/Lidar2"/>
+  <param name="serial_baudrate"     type="int"    value="115200"/><!--A1/A2 -->
+  <!--param name="serial_baudrate"     type="int"    value="256000"--><!--A3 -->
+  <param name="frame_id"            type="string" value="base_scan2"/>
+  <param name="inverted"            type="bool"   value="false"/>
+  <param name="angle_compensate"    type="bool"   value="true"/>
+  </node>
+</launch>
