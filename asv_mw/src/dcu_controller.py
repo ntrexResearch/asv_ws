@@ -143,7 +143,8 @@ if __name__ == "__main__":
 
                 left_encoder = int(rx_message[2])
                 right_encoder = int(rx_message[3])
-
+		left_velocity = int(rx_message[4])
+		right_velocity = int(rx_message[5])
                 # For Ackermann Steering system, calculate the odometry as follows. 
                 # The data to receive from DCU are as follows: left_velocity, right_velocity, left_encoder, right_encoder, steering_angle
                 # Update odometry
@@ -155,7 +156,10 @@ if __name__ == "__main__":
                 delta_th = (delta_right - delta_left) / wheel_to_wheel_d / pulse_per_distance
                 delta_x = delta_s * cos(th + delta_th / 2.0)  # vx * cos(th) * dt
                 delta_y = delta_s * sin(th + delta_th / 2.0)  # vx * sin(th) * dt
-
+		
+		vs = (left_velocity + right_velocity) / 2.0 * scale
+		vth = (left_velocity - right_velocity) / wheel_to_wheel_d * scale
+		
                 current_time = rospy.Time.now()
                 step_time = (current_time - last_time).to_sec()
                 #print("Print ", step_time)

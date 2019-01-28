@@ -6,13 +6,19 @@
     <!-- Import macros -->
     <xacro:include filename="$(find asv_description)/urdf/asv_macro.xacro" />
 
+    <link name="base_footprint"/>
+    <joint name="base_joint" type="fixed">
+	<parent link="base_footprint"/>
+	<child link="base_link"/>
+    </joint>
+
     <link name="base_link">
       <visual>
         <origin rpy="0 0 0" xyz="-0.05 0 0.37" />
         <geometry>
           <box size="1.22 0.55 0.12"/>
         </geometry>
-	<material name="white"/>
+	<material name="burgundy"/>
       </visual>
       <collision>
         <origin rpy="0 0 0" xyz="0 0 0.35" />
@@ -48,7 +54,7 @@
     <!-- lrf -->
 
     <!-- front_bottom_lrf -->
-    <link name="front_bottom_lrf">
+    <link name="base_scan">
       <visual>
         <origin rpy="0 0 ${PI}" xyz="0 0 0.00"/>
         <geometry>
@@ -59,10 +65,10 @@
     </link>
 
     <joint name="base_to_front_bottom_lrf" type="fixed">
-        <axis xyz="0 1 0"/>
+        <axis xyz="0 1 0" />
         <parent link="base_link"/>
-        <child link="front_bottom_lrf"/>
-        <origin xyz="0.50 0 0.45"/>
+        <child link="base_scan"/>
+        <origin xyz="0.50 0 0.45" rpy="0 0 ${PI}"/>
     </joint>
 
     <!-- steer -->
@@ -100,7 +106,7 @@
     -->
 
     <!-- rear_bottom_lrf -->
-    <link name="rear_bottom_lrf">
+    <link name="base_scan2">
       <visual>
         <origin rpy="0 0 ${PI}" xyz="0 0 0"/>
         <geometry>
@@ -113,8 +119,8 @@
     <joint name="base_to_rear_bottom_lrf" type="fixed">
       <axis xyz="0 1 0"/>
       <parent link="base_link"/>
-      <child link="rear_bottom_lrf"/>
-      <origin  rpy="0 0 ${PI}" xyz="-0.60 0 0.45"/>
+      <child link="base_scan2"/>
+      <origin  rpy="0 0 0" xyz="-0.60 0 0.45"/>
     </joint>
     
     <joint name="base_to_merged_lrf" type="fixed">

@@ -79,11 +79,13 @@ void LaserscanMerger::laserscan_topic_parser()
 	copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter<vector<string> >(tokens));
 
 	vector<string> tmp_input_topics;
-
 	for(int i=0;i<tokens.size();++i)
-	{
+	{	
 	        for(int j=0;j<topics.size();++j)
 		{
+		
+
+						
 			if( (tokens[i].compare(topics[j].name) == 0) && (topics[j].datatype.compare("sensor_msgs/LaserScan") == 0) )
 			{
 				tmp_input_topics.push_back(topics[j].name);
@@ -94,7 +96,6 @@ void LaserscanMerger::laserscan_topic_parser()
 	sort(tmp_input_topics.begin(),tmp_input_topics.end());
 	std::vector<string>::iterator last = std::unique(tmp_input_topics.begin(), tmp_input_topics.end());
 	tmp_input_topics.erase(last, tmp_input_topics.end());
-
 
 	// Do not re-subscribe if the topics are the same
 	if( (tmp_input_topics.size() != input_topics.size()) || !equal(tmp_input_topics.begin(),tmp_input_topics.end(),input_topics.begin()))
@@ -126,7 +127,7 @@ void LaserscanMerger::laserscan_topic_parser()
 LaserscanMerger::LaserscanMerger()
 {
 	ros::NodeHandle nh("~");
-
+	ros::Duration(1).sleep();
 	nh.getParam("destination_frame", destination_frame);
 	nh.getParam("cloud_destination_topic", cloud_destination_topic);
 	nh.getParam("scan_destination_topic", scan_destination_topic);

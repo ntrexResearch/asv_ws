@@ -33,6 +33,6 @@
 </material>
 
 <material name="burgundy">
-  <color rgba="${50.0/255} 0.0 ${13.0/255} 1.0"/>
+  <color rgba="0.412 0.0 0.102 1.0"/>
 </material>
 </robot>

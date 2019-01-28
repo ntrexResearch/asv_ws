@@ -2,7 +2,7 @@
 	<arg name="open_rviz" default="true"/>
 	<include file="$(find asv_slam)/launch/gmapping.launch">
 	</include>
-
+	<include file="$(find asv_bringup)/launch/asv_remote.launch"/>
 	<group if="$(arg open_rviz)">
 		<node pkg="rviz" type="rviz" name="rviz" required="true"
 			args="-d $(find asv_slam)/rviz/asv_gmapping.rviz"/>

@@ -7,7 +7,8 @@
   	</node>
   	<node pkg="joint_state_publisher" type="joint_state_publisher" name="joint_state_publisher"></node>
 	<!-- Bring up the laser merger -->
-<!--	<include file="$(find laser_filters)/launch/merger.launch"> -->
-<!--	</include> -->
+	<include file="$(find laser_filters)/launch/asv_filters.launch"> 
+	</include> 
+
 </launch>
 

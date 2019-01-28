@@ -1,0 +1,20 @@
+<launch>
+	<include file="$(find asv_bringup)/launch/includes/description.launch.xml">
+	</include>
+	<node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+    		<param name="publish_frequency" type="double" value="50.0" />
+    		<param name="tf_prefix" value=""/>
+  	</node>
+  	<node pkg="joint_state_publisher" type="joint_state_publisher" name="joint_state_publisher"></node>
+	<!-- Bring up the laser merger -->
+	<include file="$(find laser_filters)/launch/asv_filters.launch"> 
+	</include> 
+        <node pkg="ira_laser_tools" name="laserscan_multi_merger" type="laserscan_multi_merger" output="screen"> 
+                <param name="destination_frame" value="/base_scan"/> 
+                <param name="cloud_destination_topic" value="/no_cloud"/> 
+                <param name="scan_destination_topic" value="/scan_multi"/> 
+                <param name="laserscan_topics" value ="/scan1_filtered /scan2_filtered" /> <!-- LIST OF THE LASER SCAN TOPICS TO SUBSCRIBE --> 
+        </node> 
+
+</launch>
+
