@@ -9,6 +9,6 @@
 	<!-- Bring up the laser merger -->
 	<include file="$(find laser_filters)/launch/asv_filters.launch"> 
 	</include> 
-
+	<include file="$(find asv_mw)/launch/twist_to_ackermann_converter.launch"/>
 </launch>
 

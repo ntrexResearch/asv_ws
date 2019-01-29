@@ -1,23 +1,20 @@
 <launch>
+  <!-- Arguments -->
+  <arg name="cmd_vel_topic" default="/cmd_vel" />
+  <arg name="odom_topic" default="/odom" />
 
+  <!-- move_base -->
   <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS" />
+    <param name="observation_sources" value="scan1"/>
 
-    <param name="base_global_planner" value="navfn/NavfnROS"/>
-    <param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS"/>
-    <rosparam file="$(find asv_navigation)/config/base_global_planner.yaml" command="load"/>
-    <rosparam file="$(find asv_navigation)/config/teb_local_planner.yaml" command="load"/>
-
-    <!-- observation sources located in costmap_common.yaml -->
-    <rosparam file="$(find asv_navigation)/config/costmap_common_params.yaml" command="load" ns="global_costmap" />
-    <rosparam file="$(find asv_navigation)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
-
-    <!-- local costmap, needs size -->
-    <rosparam file="$(find asv_navigation)/config/local_costmap_params.yaml" command="load" ns="local_costmap" />
-
-    <!-- static global costmap, static map provides size -->
-    <rosparam file="$(find asv_navigation)/config/global_costmap_params.yaml" command="load" ns="global_costmap"/>
-    
+    <rosparam file="$(find asv_navigation)/param/costmap_common_params_asv.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find asv_navigation)/param/costmap_common_params_asv.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find asv_navigation)/param/local_costmap_params.yaml" command="load" />
+    <rosparam file="$(find asv_navigation)/param/global_costmap_params.yaml" command="load" />
+    <rosparam file="$(find asv_navigation)/param/move_base_params.yaml" command="load" />
+    <rosparam file="$(find asv_navigation)/param/teb_local_planner.yaml" command="load" />
+    <remap from="cmd_vel" to="$(arg cmd_vel_topic)"/>
+    <remap from="odom" to="$(arg odom_topic)"/>
   </node>
-
 </launch>
-

@@ -18,14 +18,15 @@
 
 # Authors: Ji #
 
+from __future__ import division
 import rospy
 import Queue
 
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float32, Int32, Int16
 
-from mw_serial import MDSerialThread,  queue_handler
-from math import sin, cos
+from serial_thread import DCUSerialThread,  queue_handler
+from math import sin, cos, pi
 import tf
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
@@ -33,15 +34,28 @@ from ackermann_msgs.msg import AckermannDriveStamped
 from definition import *
 
 # Constant
-wheel_to_wheel_d = 0.2835 #0.29 # unit m
-distance_per_rev = 0.471 #unit mee / 1 revolution
-pulse_per_rev = 14336 #unit pulse/1 revolution
-pulse_per_distance = 30437.367 # pulse_per_rev / distance_per_rev ~ 30437.3673,,,
-gear_ratio = 14
-motor_scale_const = 1783.4395 #gear_ratio * 60 / distance_per_rev
+wheel_to_wheel_d = 0.56 #0.29 # unit m
+wheel_radius = 0.15
+pulse_per_rev = 2000 #unit pulse/1 revolution
+pulse_per_distance = pulse_per_rev / (2 * pi * wheel_radius) # pulse_per_rev / distance_per_rev ~ 30437.3673,,,
+
+asv_ms_to_rpm = 60 / wheel_radius
+
+degree_per_rad = 180 / pi
+
+max_lin_speed = 0.075
+min_lin_speed = -0.075
+max_steering = 30
+min_steering = -30
+
+max_encoder = 32767
+min_encoder = -32768
+
 
 fault_flag = False
 index = 0
+# 1 means manual; 0 means auto
+mode = 1
 
 def init_odom():
     global x
@@ -68,17 +82,49 @@ def init_odom():
     left_encoder = 0
     right_encoder = 0
 
+def limit_lin_speed(linear):
+    speed = 0
+    if linear > max_lin_speed:
+        speed = max_lin_speed
+    elif linear < min_lin_speed:
+        speed  = min_lin_speed
+    else:
+        speed = linear
+    return speed
+
+def limit_steering_angle(angle):
+    steering_angle = 0
+    if angle > max_steering:
+        steering_angle = max_steering
+    elif angle < min_steering:
+        steering_angle = min_steering
+    else:
+        steering_angle = angle
+    return steering_angle
+
 def on_new_ackermann(data):
-    global auto_mode
+    global mode
     global emergency_flag
     global front_obstacle_flag
     global rear_obstacle_flag
-    if not auto_mode or emergency_flag or front_obstacle_flag or rear_obstacle_flag:
-        remote_tx_queue.put('c=0,0\r\n')
-    # Check the status and then publish
-    else:
-        remote_tx_queue.put('c=' + str(data.drive.speed)+ ',' + str(data.drive.steering_angle) + '\r\n')
+    #if not auto_mode or emergency_flag or front_obstacle_flag or rear_obstacle_flag:
 
+    lin_speed_limited = limit_lin_speed(data.drive.speed)
+    steering_angle_degree = data.drive.steering_angle * degree_per_rad
+    steering_angle_limited = limit_steering_angle(steering_angle_degree)
+    #print(data.drive.steering_angle, steering_angle_limited)
+    lin_vel_rpm = int( lin_speed_limited * asv_ms_to_rpm )  # 60s per min
+    
+    #if mode:
+    #    remote_tx_queue.put('c=0,0\r\n')
+    # Check the status and then publish
+    #else:
+
+    #print("Command working")
+    #print(lin_vel_rpm, data.drive.speed, data.drive.steering_angle)
+    remote_tx_queue.put('c=' + str(lin_vel_rpm)+ ',' + str(int(steering_angle_limited)) + '\r\n')
+
+    #remote_tx_queue.put('c=30,' + str(data.drive.steering_angle) + '\r\n')
 def on_new_cmd(data):
     global remote_tx_queue
     remote_tx_queue.put('co1='+ str(data.data)+';co2='+ str(data.data)+'\r\n')
@@ -93,13 +139,13 @@ def shutdownhook():
     serialThread.join()
 
 if __name__ == "__main__":
-    rospy.init_node("dcu_node") 
+    rospy.init_node("dcu_controller_node") 
 
     port = rospy.get_param("~serial_dev")
     tx_queue = Queue.Queue()
     remote_tx_queue = Queue.Queue()
     rx_queue = Queue.Queue()
-    serialThread = MDSerialThread(1, "serialThread-1", remote_tx_queue,tx_queue, rx_queue, port)
+    serialThread = DCUSerialThread(1, "serialThread-1", remote_tx_queue,tx_queue, rx_queue, port)
     rate = rospy.Rate(20)
     # On shutdown stop the motor and close the serial port
     rospy.on_shutdown(shutdownhook)
@@ -127,6 +173,7 @@ if __name__ == "__main__":
 
         if tx_queue.empty():
             tx_queue.put('s\r\n')
+            #print("work")
         #print(rx_queue.empty())
         while not rx_queue.empty():
             rx_message = queue_handler(rx_queue, False)
@@ -134,34 +181,51 @@ if __name__ == "__main__":
             #print(message_type)
             if message_type == "s":
                 status = int(rx_message[1])
-                auto_mode = (status >> 3) & 0x1
-                emergency_flag = (status >> 2) & 0x1
-                front_obstacle_flag = (status >> 1) & 0x1
-                rear_obstacle_flag = status & 0x1
-                if not auto_mode or emergency_flag or front_obstacle_flag or rear_obstacle_flag:
-                    break
+                mode = (status >> 3) & 0x1
+                emergency_flag = not ((status >> 2) & 0x1)
+                # front_obstacle_flag = (status >> 1) & 0x1
+                # rear_obstacle_flag = status & 0x1
+                #if not auto_mode or emergency_flag: or front_obstacle_flag or rear_obstacle_flag:
+                #    break
+                # when mode is 1, manual. when the mode is 0, it is auto.
 
+                if mode or emergency_flag:
+                    break
                 left_encoder = int(rx_message[2])
                 right_encoder = int(rx_message[3])
-		left_velocity = int(rx_message[4])
-		right_velocity = int(rx_message[5])
+		left_velocity = float(rx_message[4])
+		right_velocity = float(rx_message[5])
                 # For Ackermann Steering system, calculate the odometry as follows. 
                 # The data to receive from DCU are as follows: left_velocity, right_velocity, left_encoder, right_encoder, steering_angle
                 # Update odometry
-                delta_left = left_encoder - left_encoder_prev
-                delta_right = right_encoder - right_encoder_prev
+                
+                # For the special case when the encoder counter exceeds the range -32,769 ~ 32767
+                if ( left_encoder_prev > 30000 and left_encoder_prev < max_encoder ) and ( left_encoder < -30000 and left_encoder > min_encoder ):
+                    delta_left = (max_encoder - left_encoder_prev) - (min_encoder - left_encoder)
+                elif ( left_encoder_prev < -30000 and left_encoder_prev > min_encoder ) and (left_encoder > 30000 and left_encoder < max_encoder ):
+                    delta_left = (min_encoder - left_encoder_prev) - (max_encoder - left_encoder )
+                else:
+                    delta_left = left_encoder - left_encoder_prev
+
+                if ( right_encoder_prev > 30000 and right_encoder_prev < max_encoder ) and ( right_encoder < -30000 and right_encoder > min_encoder ):
+                    delta_right = (max_encoder - right_encoder_prev) - (min_encoder - right_encoder)
+                elif ( right_encoder_prev < -30000 and right_encoder_prev > min_encoder ) and (right_encoder > 30000 and right_encoder < max_encoder ):
+                    delta_right = (min_encoder - right_encoder_prev) - (max_encoder - right_encoder )
+                else:
+                    delta_right = right_encoder - right_encoder_prev
 
 
-                delta_s = (delta_left + delta_right) / 2.0 / pulse_per_distance
-                delta_th = (delta_right - delta_left) / wheel_to_wheel_d / pulse_per_distance
+                delta_s = (delta_left - delta_right) / 2.0 / pulse_per_distance
+                delta_th = (delta_right + delta_left) / wheel_to_wheel_d / pulse_per_distance
                 delta_x = delta_s * cos(th + delta_th / 2.0)  # vx * cos(th) * dt
                 delta_y = delta_s * sin(th + delta_th / 2.0)  # vx * sin(th) * dt
 		
-		vs = (left_velocity + right_velocity) / 2.0 * scale
-		vth = (left_velocity - right_velocity) / wheel_to_wheel_d * scale
-		
+		vs = (left_velocity - right_velocity) / 2.0 / asv_ms_to_rpm
+		vth = (left_velocity + right_velocity) / wheel_to_wheel_d / asv_ms_to_rpm
+
                 current_time = rospy.Time.now()
                 step_time = (current_time - last_time).to_sec()
+
                 #print("Print ", step_time)
                 #velocity_l = delta_left / step_time / pulse_per_distance
                 #velocity_r = delta_right / step_time / pulse_per_distance
@@ -176,7 +240,11 @@ if __name__ == "__main__":
                 y += delta_y
                 th += delta_th
                 odom_quat = tf.transformations.quaternion_from_euler(0, 0, th)
-
+                # print("delta values: ")
+                print(delta_left, delta_right)
+                if abs(delta_left) > 1000 or abs(delta_right) > 1000:
+                    print(left_encoder, left_encoder_prev)
+                    print(right_encoder, right_encoder_prev)
                 odom_broadcaster.sendTransform(
                     (x, y, 0),
                     odom_quat,

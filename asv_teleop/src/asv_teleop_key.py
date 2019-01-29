@@ -5,6 +5,9 @@ from ackermann_msgs.msg import AckermannDriveStamped
 from std_msgs.msg import Float64
 import sys, select, termios, tty
 from numpy import clip
+from math import pi
+
+degree_per_rad = 180 / pi
 
 control_keys = {
 	'up'	: '\x41',
@@ -37,7 +40,7 @@ class AckermannDriveKeyop:
 		# 	max_steering_angle = float(args[1])
 		# else:
 		max_speed = 0.075
-		max_steering_angle = 30 
+		max_steering_angle = 30 / degree_per_rad 
 
 		# if len(args) > 2:
 		# 	cmd_topic = '/' + args[2]

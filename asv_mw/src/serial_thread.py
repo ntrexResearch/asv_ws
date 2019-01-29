@@ -286,7 +286,7 @@ def md_thread_func(thread, thread_name, _serial, remote_tx_queue, tx_queue, rx_q
     return_flag = False
     newline_flag = False
     rx_msg = ''
-    pattern = r'([a-z]*)([0-9]*)=(-*[0-9]*),*(-*[0-9]*),*([0-9]*)(\r\n)'
+    pattern = r'([a-z]*)([0-9]*)=([0-9]*),*(-*[0-9]*),*(-*[0-9]*),*(-*[0-9]*\.*[0-9]*),*(-*[0-9]*\.*[0-9]*)(\r\n)'
 
     while not thread._stopevent.isSet():
         if _serial.isOpen():
@@ -295,6 +295,7 @@ def md_thread_func(thread, thread_name, _serial, remote_tx_queue, tx_queue, rx_q
                 while not remote_tx_queue.empty():
                     tx_msg = remote_tx_queue.get()
                     #tx_msg = make_text_command(command_set)
+                    #print(tx_msg)
                     _serial.write(tx_msg)
             elif not tx_queue.empty() and _serial.inWaiting() == 0:
                 tx_msg = tx_queue.get()
@@ -311,11 +312,10 @@ def md_thread_func(thread, thread_name, _serial, remote_tx_queue, tx_queue, rx_q
                 if return_flag and newline_flag:
                     rx_msg_regex = re.search(pattern, rx_msg)
                     return_flag = newline_flag = False
-                    # print(rx_msg)
-
+                    print(rx_msg)
                     if rx_msg_regex:
-                        # print(rx_msg_regex.group(1), rx_msg_regex.group(3), rx_msg_regex.group(4), rx_msg_regex.group(5))
-                        queue_handler(rx_queue, True, [rx_msg_regex.group(1),rx_msg_regex.group(3), rx_msg_regex.group(4), rx_msg_regex.group(5)])
+                       # print(rx_msg_regex.group(1), rx_msg_regex.group(3), rx_msg_regex.group(4), rx_msg_regex.group(5), rx_msg_regex.group(6), rx_msg_regex.group(7))
+                        queue_handler(rx_queue, True, [rx_msg_regex.group(1),rx_msg_regex.group(3), rx_msg_regex.group(4), rx_msg_regex.group(5), rx_msg_regex.group(6), rx_msg_regex.group(7)])
                     rx_msg = ''
         rospy.sleep(0.01)
 

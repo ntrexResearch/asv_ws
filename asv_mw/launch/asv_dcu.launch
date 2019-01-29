@@ -1,6 +1,6 @@
 <launch>
         <arg name="serial_dev" default="/dev/DCU"/>
-	<node pkg="asv_mw" name="asv_dcu.py" name="asv_dcu_node" output="screen">
+	<node pkg="asv_mw" type="dcu_controller.py" name="dcu_controller_node" output="screen">
 		<param name="serial_dev" value="$(arg serial_dev)"/>
 	</node>
 </launch>
