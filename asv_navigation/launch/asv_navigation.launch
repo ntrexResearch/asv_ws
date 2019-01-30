@@ -1,6 +1,6 @@
 <launch>
   <!-- Arguments -->
-  <arg name="map_file" default="$(find asv_navigation)/maps/map.yaml"/>
+  <arg name="map_file" default="$(find asv_navigation)/maps/lab.yaml"/>
   <arg name="open_rviz" default="true"/>
 
   <!-- Turtlebot3 -->

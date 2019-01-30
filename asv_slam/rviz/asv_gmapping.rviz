@@ -80,25 +80,47 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        caster_wheel:
+        front_steer_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        left_front_wheel:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        imu_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        left_wheel:
+        left_rear_wheel:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        right_wheel:
+        merged_lrf:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        rear_wheel_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
+        right_front_wheel:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_rear_wheel:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        steer_left:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        steer_right:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
       Name: RobotModel
       Robot Description: robot_description
       TF Prefix: ""
@@ -118,17 +140,27 @@ Visualization Manager:
           Value: true
         base_scan2:
           Value: true
-        caster_wheel:
+        front_steer_link:
           Value: true
-        imu_link:
+        left_front_wheel:
           Value: true
-        left_wheel:
+        left_rear_wheel:
           Value: true
         map:
           Value: true
+        merged_lrf:
+          Value: true
         odom:
           Value: true
-        right_wheel:
+        rear_wheel_link:
+          Value: true
+        right_front_wheel:
+          Value: true
+        right_rear_wheel:
+          Value: true
+        steer_left:
+          Value: true
+        steer_right:
           Value: true
       Marker Scale: 1
       Name: TF
@@ -136,24 +168,30 @@ Visualization Manager:
       Show Axes: true
       Show Names: false
       Tree:
-        base_footprint:
-          base_link:
-            base_scan:
-              {}
-            base_scan2:
-              {}
-            caster_wheel:
-              {}
-            imu_link:
-              {}
-            left_wheel:
-              {}
-            right_wheel:
-              {}
         map:
-          {}
-        odom:
-          {}
+          odom:
+            base_footprint:
+              base_link:
+                base_scan:
+                  {}
+                base_scan2:
+                  {}
+                front_steer_link:
+                  {}
+                left_rear_wheel:
+                  {}
+                merged_lrf:
+                  {}
+                rear_wheel_link:
+                  {}
+                right_rear_wheel:
+                  {}
+                steer_left:
+                  left_front_wheel:
+                    {}
+                steer_right:
+                  right_front_wheel:
+                    {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -166,11 +204,11 @@ Visualization Manager:
       Channel Name: intensity
       Class: rviz/LaserScan
       Color: 255; 255; 255
-      Color Transformer: Intensity
+      Color Transformer: FlatColor
       Decay Time: 0
       Enabled: true
       Invert Rainbow: false
-      Max Color: 255; 255; 255
+      Max Color: 255; 0; 0
       Max Intensity: 47
       Min Color: 0; 0; 0
       Min Intensity: 47
@@ -179,7 +217,7 @@ Visualization Manager:
       Queue Size: 10
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.00999999978
+      Size (m): 0.0500000007
       Style: Flat Squares
       Topic: /scan_multi
       Unreliable: false
@@ -251,16 +289,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 4.16971111
+      Distance: 16.8759155
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.317137986
-        Y: -0.294855356
-        Z: 0.696100473
+        X: -0.281227946
+        Y: -0.242734492
+        Z: 0.696065962
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
@@ -288,4 +326,4 @@ Window Geometry:
     collapsed: true
   Width: 1855
   X: 1145
-  Y: 449
+  Y: 467

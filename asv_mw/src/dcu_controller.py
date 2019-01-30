@@ -164,6 +164,8 @@ if __name__ == "__main__":
     ctrl_c = False
     left_encoder_prev = 0
     right_encoder_prev = 0
+    delta_left_prev = 0
+    delta_right_prev = 0
     vs = 0
     vth = 0
     serialThread.start()
@@ -200,19 +202,34 @@ if __name__ == "__main__":
                 # Update odometry
                 
                 # For the special case when the encoder counter exceeds the range -32,769 ~ 32767
-                if ( left_encoder_prev > 30000 and left_encoder_prev < max_encoder ) and ( left_encoder < -30000 and left_encoder > min_encoder ):
+                if ( left_encoder_prev > 25000 and left_encoder_prev <= max_encoder ) and ( left_encoder < -25000 and left_encoder >= min_encoder ):
                     delta_left = (max_encoder - left_encoder_prev) - (min_encoder - left_encoder)
-                elif ( left_encoder_prev < -30000 and left_encoder_prev > min_encoder ) and (left_encoder > 30000 and left_encoder < max_encoder ):
+                    print("Left plus to minus flag")
+                elif ( left_encoder_prev < -25000 and left_encoder_prev > min_encoder ) and (left_encoder > 25000 and left_encoder <= max_encoder ):
                     delta_left = (min_encoder - left_encoder_prev) - (max_encoder - left_encoder )
+                    print("Left minus to plus flag")
                 else:
                     delta_left = left_encoder - left_encoder_prev
 
-                if ( right_encoder_prev > 30000 and right_encoder_prev < max_encoder ) and ( right_encoder < -30000 and right_encoder > min_encoder ):
-                    delta_right = (max_encoder - right_encoder_prev) - (min_encoder - right_encoder)
-                elif ( right_encoder_prev < -30000 and right_encoder_prev > min_encoder ) and (right_encoder > 30000 and right_encoder < max_encoder ):
+                if ( right_encoder_prev > 25000 and right_encoder_prev <= max_encoder ) and ( right_encoder < -25000 and right_encoder >= min_encoder ):
+                    delta_right = (max_encoder - right_encoder_prev) - (min_encoder - right_encoder) 
+                    print("Right plus to minus flag")
+                elif ( right_encoder_prev < -25000 and right_encoder_prev >= min_encoder ) and (right_encoder > 25000 and right_encoder <= max_encoder ):
                     delta_right = (min_encoder - right_encoder_prev) - (max_encoder - right_encoder )
+                    print("Right minus to plus flag")
                 else:
                     delta_right = right_encoder - right_encoder_prev
+
+                # Block delta values over than 150
+                if (abs(delta_left) > 150):
+                    print("Delta outlier check")
+                    print(delta_left, left_encoder, left_encoder_prev)
+                    delta_left = delta_left_prev
+                    
+                if (abs(delta_right) > 150):
+                    print("Delta outlier right check")
+                    print(delta_right, right_encoder, right_encoder_prev)
+                    delta_right = delta_right_prev
 
 
                 delta_s = (delta_left - delta_right) / 2.0 / pulse_per_distance
@@ -241,10 +258,11 @@ if __name__ == "__main__":
                 th += delta_th
                 odom_quat = tf.transformations.quaternion_from_euler(0, 0, th)
                 # print("delta values: ")
-                print(delta_left, delta_right)
-                if abs(delta_left) > 1000 or abs(delta_right) > 1000:
-                    print(left_encoder, left_encoder_prev)
-                    print(right_encoder, right_encoder_prev)
+                #print(delta_left, delta_right)
+                #if abs(delta_left) > 1000 or abs(delta_right) > 1000:
+                #   print("Check encoder values")
+                #    print(left_encoder, left_encoder_prev)
+                #    print(right_encoder, right_encoder_prev)
                 odom_broadcaster.sendTransform(
                     (x, y, 0),
                     odom_quat,
@@ -267,5 +285,7 @@ if __name__ == "__main__":
                 last_time = current_time
                 left_encoder_prev = left_encoder
                 right_encoder_prev = right_encoder
+                delta_left_prev = delta_left
+                delta_right_prev = delta_right
         # print(tx_queue.empty())
         rate.sleep()

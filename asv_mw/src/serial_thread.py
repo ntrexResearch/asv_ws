@@ -312,7 +312,7 @@ def md_thread_func(thread, thread_name, _serial, remote_tx_queue, tx_queue, rx_q
                 if return_flag and newline_flag:
                     rx_msg_regex = re.search(pattern, rx_msg)
                     return_flag = newline_flag = False
-                    print(rx_msg)
+                    #print(rx_msg)
                     if rx_msg_regex:
                        # print(rx_msg_regex.group(1), rx_msg_regex.group(3), rx_msg_regex.group(4), rx_msg_regex.group(5), rx_msg_regex.group(6), rx_msg_regex.group(7))
                         queue_handler(rx_queue, True, [rx_msg_regex.group(1),rx_msg_regex.group(3), rx_msg_regex.group(4), rx_msg_regex.group(5), rx_msg_regex.group(6), rx_msg_regex.group(7)])
