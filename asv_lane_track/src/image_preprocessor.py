@@ -41,3 +41,28 @@ class ImagePreprocessor:
         upper = np.array(upper, np.uint8)
         color_mask = cv2.inRange(hsv, lower, upper)
         return cv2.bitwise_and(img, img, mask=color_mask)
+
+    def convert_hsv(self, img):
+        return cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+
+    def convert_hls(self, img):
+        return cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
+
+    def select_white_yellow(self, img):
+        converted = self.convert_hls(img)
+        # white color mask
+        lower = np.uint8([0, 255, 0])
+        upper = np.uint8([255,255,255])
+        white_mask= cv2.inRange(converted, lower, upper)
+
+        #yellow mask
+        lower = np.uint8([0, 255, 0])
+        upper = np.uint8([255, 255, 255])
+        yellow_mask = cv2.inRange(converted, lower, upper)
+        mask = cv2.bitwise_or(white_mask, yellow_mask)
+        return cv2.bitwise_and(img, img, mask=mask)
+
+
+    def hough_lines(self, img):
+        return cv2.HoughLinesP(img, rho=1, theta=np.pi/180, threshold=20, minLineLength=20, maxLineGap=300)
+
