@@ -293,8 +293,8 @@ int main(int argc, char * argv[]) {
 
         if (op_result == RESULT_OK) {
             op_result = drv->ascendScanData(nodes, count);
-            float angle_min = DEG2RAD(-90.0f);
-            float angle_max = DEG2RAD(269.0f);
+            float angle_min = DEG2RAD(0.0f);
+            float angle_max = DEG2RAD(359.0f);
             if (op_result == RESULT_OK) {
                 if (angle_compensate) {
                     //const int angle_compensate_multiple = 1;
@@ -339,8 +339,8 @@ int main(int argc, char * argv[]) {
                }
             } else if (op_result == RESULT_OPERATION_FAIL) {
                 // All the data is invalid, just publish them
-                float angle_min = DEG2RAD(-90.0f);
-                float angle_max = DEG2RAD(449.0f);
+                float angle_min = DEG2RAD(0.0f);
+                float angle_max = DEG2RAD(359.0f);
 
                 publish_scan(&scan_pub, nodes, count,
                              start_scan_time, scan_duration, inverted,

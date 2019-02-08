@@ -183,17 +183,17 @@ if __name__ == "__main__":
             #print(message_type)
             if message_type == "s":
                 status = int(rx_message[1])
-                mode = (status >> 3) & 0x1
-                emergency_flag = not ((status >> 2) & 0x1)
+                mode = not((status >> 3) & 0x1)
+                emergency_flag = ((status >> 2) & 0x1)
                 # front_obstacle_flag = (status >> 1) & 0x1
                 # rear_obstacle_flag = status & 0x1
                 #if not auto_mode or emergency_flag: or front_obstacle_flag or rear_obstacle_flag:
                 #    break
                 # when mode is 1, manual. when the mode is 0, it is auto.
-
-                if mode or emergency_flag:
+                #print(mode, emergency_flag)
+                if mode or emergency_flag: 
                     break
-                left_encoder = int(rx_message[2])
+		left_encoder = int(rx_message[2])
                 right_encoder = int(rx_message[3])
 		left_velocity = float(rx_message[4])
 		right_velocity = float(rx_message[5])
