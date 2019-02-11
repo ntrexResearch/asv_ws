@@ -1,5 +1,6 @@
 #! /usr/bin/python
-
+#-*- coding: utf-8 -*-
+# 한글 입력을 위한 엔코딩 명시
 #################################################################################
 # Copyright 2018 NTREX CO.
 #
@@ -33,11 +34,11 @@ from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 from ackermann_msgs.msg import AckermannDriveStamped
 from definition import *
 
-# Constant
-wheel_to_wheel_d = 0.56 #0.29 # unit m
+# 로봇 구동부에 관한 정보를 기재한다.
+wheel_to_wheel_d = 0.56 # 바퀴와 바퀴 간 거리  [m]
 wheel_radius = 0.15
-pulse_per_rev = 2000 #unit pulse/1 revolution
-pulse_per_distance = pulse_per_rev / (2 * pi * wheel_radius) # pulse_per_rev / distance_per_rev ~ 30437.3673,,,
+pulse_per_rev = 2000  # 한바퀴 회전시 엔코더 펄스 카운트(이 값은 부착된 엔코더와 감속기를 고려해 정해진다.) [pulse / rev]
+pulse_per_distance = pulse_per_rev / (2 * pi * wheel_radius) # 1m 이동시 엔코더 펄스 카운트 [pulse / m]
 
 asv_ms_to_rpm = 60 / wheel_radius
 
@@ -57,7 +58,12 @@ index = 0
 # 1 means manual; 0 means auto
 mode = 1
 
+
 def init_odom():
+    """
+    이 함수는 ros topic odom 에 대한 정보를 초기화한다.
+    :return: None
+    """
     global x
     global y
     global th
@@ -82,17 +88,29 @@ def init_odom():
     left_encoder = 0
     right_encoder = 0
 
+
 def limit_lin_speed(linear):
+    """
+    이 함수는 로봇의 스피드를 제한한다.
+    :param linear: 직진 스피드값을 받아온다.
+    :return: 제한 처리가 된 스피드값을 내보낸다.
+    """
     speed = 0
     if linear > max_lin_speed:
         speed = max_lin_speed
     elif linear < min_lin_speed:
-        speed  = min_lin_speed
+        speed = min_lin_speed
     else:
         speed = linear
     return speed
 
+
 def limit_steering_angle(angle):
+    """
+    이 함수는 로봇 조향각 입력을 제한한다.
+    :param angle: 조향각 입력값을 받아온다.
+    :return: 제한 처리가 된 조향각을 내보낸다.
+    """
     steering_angle = 0
     if angle > max_steering:
         steering_angle = max_steering
@@ -102,7 +120,30 @@ def limit_steering_angle(angle):
         steering_angle = angle
     return steering_angle
 
+
+def make_text_command(command_type, arg1=0.0, arg2=0.0):
+    """
+    이 함수를 사용해 DCU에 들어가는 text 기반 명령어를 만든다.
+    :param command_type: DCU를 위한 명령어의 종류를 스트링으로 받는다.
+    :param arg1: 주행 속도에 해당하는 명령값을 받는다.
+    :param arg2: 조향각에 해당하는 명령값을 받는다.
+    :return: 문자열로 된 DCU 명령어
+    """
+    if command_type == 'Control Motion':
+        return 'c=%0.4f,%d\r\n' % (arg1, arg2)
+    elif command_type == 'System Command':
+        return 'co1=%d;co2=%d\r\n' % (arg1, arg2)
+    elif command_type == 'Poll Status':
+        return 's\r\n'
+
+
 def on_new_ackermann(data):
+    """
+    이 함수는 ackermann_cmd topic 의 callback 함수이다.
+    입력 값을 검토하고 DCU 시리얼 전송 queue에 명령어를 넣는다.
+    :param data: ackermann_cmd data
+    :return: None
+    """
     global mode
     global emergency_flag
     global front_obstacle_flag
@@ -112,8 +153,7 @@ def on_new_ackermann(data):
     lin_speed_limited = limit_lin_speed(data.drive.speed)
     steering_angle_degree = data.drive.steering_angle * degree_per_rad
     steering_angle_limited = limit_steering_angle(steering_angle_degree)
-    #print(data.drive.steering_angle, steering_angle_limited)
-    lin_vel_rpm = int( lin_speed_limited * asv_ms_to_rpm )  # 60s per min
+    lin_vel_rpm = int( lin_speed_limited * asv_ms_to_rpm )
     
     #if mode:
     #    remote_tx_queue.put('c=0,0\r\n')
@@ -122,14 +162,28 @@ def on_new_ackermann(data):
 
     #print("Command working")
     #print(lin_vel_rpm, data.drive.speed, data.drive.steering_angle)
-    remote_tx_queue.put('c=' + str(lin_vel_rpm)+ ',' + str(int(steering_angle_limited)) + '\r\n')
+    remote_tx_queue.put(make_text_command('Control Motion', lin_vel_rpm, int(steering_angle_limited)))
 
-    #remote_tx_queue.put('c=30,' + str(data.drive.steering_angle) + '\r\n')
+
 def on_new_cmd(data):
+    """
+    이 함수는 mw/command topic callback 함수이다.
+    command 함수는 다음과 같은 기능을 수행한다.
+    -- command 가 0이면 Motor control을 서보 오프시킨다.
+    -- command 가 1이면 Motor control을 서보 온시킨다.
+    -- command 가 2이면 Motor control에 발생한 fault를 clear한다.
+    :param data: command topic 데이터이다.
+    :return: None
+    """
     global remote_tx_queue
     remote_tx_queue.put('co1='+ str(data.data)+';co2='+ str(data.data)+'\r\n')
 
+
 def shutdownhook():
+    """
+    이 함수는 DCU 노드 종료시 불려지는 함수이다.
+    :return: None
+    """
     global ctrl_c
     global remote_tx_queue
     global serialThread
@@ -138,14 +192,14 @@ def shutdownhook():
     remote_tx_queue.put('c=0,0\r\n') 
     serialThread.join()
 
-if __name__ == "__main__":
-    rospy.init_node("dcu_controller_node") 
 
+if __name__ == "__main__":
+    rospy.init_node("dcu_controller_node")
     port = rospy.get_param("~serial_dev")
     tx_queue = Queue.Queue()
     remote_tx_queue = Queue.Queue()
     rx_queue = Queue.Queue()
-    serialThread = DCUSerialThread(1, "serialThread-1", remote_tx_queue,tx_queue, rx_queue, port)
+    serialThread = DCUSerialThread(1, "DCU serial thread", remote_tx_queue,tx_queue, rx_queue, port)
     rate = rospy.Rate(20)
     # On shutdown stop the motor and close the serial port
     rospy.on_shutdown(shutdownhook)
@@ -171,16 +225,11 @@ if __name__ == "__main__":
     serialThread.start()
     while not ctrl_c:
         current_time = rospy.Time.now()
-        #print("what")a
-
         if tx_queue.empty():
             tx_queue.put('s\r\n')
-            #print("work")
-        #print(rx_queue.empty())
         while not rx_queue.empty():
             rx_message = queue_handler(rx_queue, False)
             message_type = rx_message[0]
-            #print(message_type)
             if message_type == "s":
                 status = int(rx_message[1])
                 mode = not((status >> 3) & 0x1)
@@ -193,10 +242,10 @@ if __name__ == "__main__":
                 #print(mode, emergency_flag)
                 if mode or emergency_flag: 
                     break
-		left_encoder = int(rx_message[2])
+                left_encoder = int(rx_message[2])
                 right_encoder = int(rx_message[3])
-		left_velocity = float(rx_message[4])
-		right_velocity = float(rx_message[5])
+                left_velocity = float(rx_message[4])
+                right_velocity = float(rx_message[5])
                 # For Ackermann Steering system, calculate the odometry as follows. 
                 # The data to receive from DCU are as follows: left_velocity, right_velocity, left_encoder, right_encoder, steering_angle
                 # Update odometry
@@ -204,31 +253,31 @@ if __name__ == "__main__":
                 # For the special case when the encoder counter exceeds the range -32,769 ~ 32767
                 if ( left_encoder_prev > 25000 and left_encoder_prev <= max_encoder ) and ( left_encoder < -25000 and left_encoder >= min_encoder ):
                     delta_left = (max_encoder - left_encoder_prev) - (min_encoder - left_encoder)
-                    print("Left plus to minus flag")
+                    #print("Left plus to minus flag")
                 elif ( left_encoder_prev < -25000 and left_encoder_prev > min_encoder ) and (left_encoder > 25000 and left_encoder <= max_encoder ):
                     delta_left = (min_encoder - left_encoder_prev) - (max_encoder - left_encoder )
-                    print("Left minus to plus flag")
+                    #print("Left minus to plus flag")
                 else:
                     delta_left = left_encoder - left_encoder_prev
 
                 if ( right_encoder_prev > 25000 and right_encoder_prev <= max_encoder ) and ( right_encoder < -25000 and right_encoder >= min_encoder ):
                     delta_right = (max_encoder - right_encoder_prev) - (min_encoder - right_encoder) 
-                    print("Right plus to minus flag")
+                    #print("Right plus to minus flag")
                 elif ( right_encoder_prev < -25000 and right_encoder_prev >= min_encoder ) and (right_encoder > 25000 and right_encoder <= max_encoder ):
                     delta_right = (min_encoder - right_encoder_prev) - (max_encoder - right_encoder )
-                    print("Right minus to plus flag")
+                    #print("Right minus to plus flag")
                 else:
                     delta_right = right_encoder - right_encoder_prev
 
                 # Block delta values over than 150
                 if (abs(delta_left) > 150):
-                    print("Delta outlier check")
-                    print(delta_left, left_encoder, left_encoder_prev)
+                    #print("Delta outlier check")
+                    #print(delta_left, left_encoder, left_encoder_prev)
                     delta_left = delta_left_prev
                     
                 if (abs(delta_right) > 150):
-                    print("Delta outlier right check")
-                    print(delta_right, right_encoder, right_encoder_prev)
+                    #print("Delta outlier right check")
+                    #print(delta_right, right_encoder, right_encoder_prev)
                     delta_right = delta_right_prev
 
 
@@ -236,33 +285,13 @@ if __name__ == "__main__":
                 delta_th = (delta_right + delta_left) / wheel_to_wheel_d / pulse_per_distance
                 delta_x = delta_s * cos(th + delta_th / 2.0)  # vx * cos(th) * dt
                 delta_y = delta_s * sin(th + delta_th / 2.0)  # vx * sin(th) * dt
-		
-		vs = (left_velocity - right_velocity) / 2.0 / asv_ms_to_rpm
-		vth = (left_velocity + right_velocity) / wheel_to_wheel_d / asv_ms_to_rpm
-
+                vs = (left_velocity - right_velocity) / 2.0 / asv_ms_to_rpm
+                vth = (left_velocity + right_velocity) / wheel_to_wheel_d / asv_ms_to_rpm
                 current_time = rospy.Time.now()
-                step_time = (current_time - last_time).to_sec()
-
-                #print("Print ", step_time)
-                #velocity_l = delta_left / step_time / pulse_per_distance
-                #velocity_r = delta_right / step_time / pulse_per_distance
-                #vs = (velocity_l + velocity_r) / 2.0
-                #print(velocity_l)
-                #print(velocity_r)
-                #print("vs = ",vs)
-                #vth = (velocity_r - velocity_l) / wheel_to_wheel_d * 2.0
-                #print("vth = ",vth)
-                ## delta_th = vth * dt
                 x += delta_x
                 y += delta_y
                 th += delta_th
                 odom_quat = tf.transformations.quaternion_from_euler(0, 0, th)
-                # print("delta values: ")
-                #print(delta_left, delta_right)
-                #if abs(delta_left) > 1000 or abs(delta_right) > 1000:
-                #   print("Check encoder values")
-                #    print(left_encoder, left_encoder_prev)
-                #    print(right_encoder, right_encoder_prev)
                 odom_broadcaster.sendTransform(
                     (x, y, 0),
                     odom_quat,
@@ -279,13 +308,9 @@ if __name__ == "__main__":
                 odom.pose.pose = Pose(Point(x, y, 0), Quaternion(*odom_quat))
                 # set the velocity
                 odom.twist.twist = Twist(Vector3(vs, 0, 0), Vector3(0, 0, vth))
-                #print("Publishing odom")
-                # publish the message
                 odom_pub.publish(odom)
-                last_time = current_time
                 left_encoder_prev = left_encoder
                 right_encoder_prev = right_encoder
                 delta_left_prev = delta_left
                 delta_right_prev = delta_right
-        # print(tx_queue.empty())
         rate.sleep()

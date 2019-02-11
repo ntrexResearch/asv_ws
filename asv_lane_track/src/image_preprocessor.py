@@ -127,7 +127,7 @@ class ImagePreprocessor:
                 cv2.line(line_image, line[0], line[1], color, thickness)
         return cv2.addWeighted(img, 1.0, line_image, 0.95, 0.0)
 
-    def draw_lines_from_points(self, img, lines, color=[255, 0, 0], thickness = 20):
+    def draw_lines_from_points(self, img, lines, color=[0, 255, 0], thickness = 5):
         line_image = np.zeros_like(img)
         for line in lines:
             if line is not None:
