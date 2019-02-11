@@ -55,7 +55,7 @@ def shutdownhook():
 
 
 if __name__ == "__main__":
-    rospy.init_node("stella_imu_node")
+    rospy.init_node("imu_node")
     imu_data = Imu()
     init_imu()
     port = rospy.get_param("~serial_dev")
