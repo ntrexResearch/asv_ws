@@ -10,6 +10,7 @@
     <joint name="base_joint" type="fixed">
 	<parent link="base_footprint"/>
 	<child link="base_link"/>
+	<origin xyz="0.38 0 0"/>
     </joint>
 
     <link name="base_link">
@@ -23,12 +24,24 @@
       <collision>
         <origin rpy="0 0 0" xyz="0 0 0.35" />
         <geometry>
-          <box size="1.0 0.55 0.4"/>
+          <box size="1.0 0.55 0.41"/>
         </geometry>
       </collision>
       <xacro:default_inertial mass="10"/>
     </link>
-
+    <link name="front_mark">
+	<visual>
+	    <origin xyz="0.595 0 0.36" rpy="0 0 0"/>
+	    <geometry>
+		<box size="0.08 0.08 0.08"/>
+	    </geometry>
+	    <material name="grey"/>
+	</visual>
+    </link>
+    <joint name="base_front_mark_joint" type="fixed">
+	<parent link="base_link"/>
+	<child link="front_mark"/>
+    </joint>
     <xacro:rear_wheel/>
     <xacro:front_wheel right_left="right" reflect_right_left="1"/>
     <xacro:front_wheel right_left="left" reflect_right_left="-1"/>

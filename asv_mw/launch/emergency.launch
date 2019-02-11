@@ -1,0 +1,3 @@
+<launch>
+    <node pkg="asv_mw" type="emergency_node.py" name="emergency_node" output="screen"/>
+</launch>

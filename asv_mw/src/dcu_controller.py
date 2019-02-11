@@ -130,7 +130,7 @@ def make_text_command(command_type, arg1=0.0, arg2=0.0):
     :return: 문자열로 된 DCU 명령어
     """
     if command_type == 'Control Motion':
-        return 'c=%0.4f,%d\r\n' % (arg1, arg2)
+        return 'c=%d,%d\r\n' % (arg1, arg2)
     elif command_type == 'System Command':
         return 'co1=%d;co2=%d\r\n' % (arg1, arg2)
     elif command_type == 'Poll Status':
@@ -189,7 +189,7 @@ def shutdownhook():
     global serialThread
     ctrl_c = True
     # Stop the wheels
-    remote_tx_queue.put('c=0,0\r\n') 
+    remote_tx_queue.put(make_text_command('Control Motion', 0, 0)) 
     serialThread.join()
 
 
