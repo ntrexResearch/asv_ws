@@ -204,6 +204,7 @@ if __name__ == "__main__":
     # On shutdown stop the motor and close the serial port
     rospy.on_shutdown(shutdownhook)
 
+    publisher_driving_mode = rospy.Publisher("/mode", Int8, queue_size=1)
     publisher_mw_fault1 = rospy.Publisher("/mw/fault1", Int32, queue_size=10)
     publisher_mw_fault2 = rospy.Publisher("/mw/fault2", Int32, queue_size=10)
     subscriber_cmd = rospy.Subscriber("mw/command", Int32, on_new_cmd, queue_size=10)

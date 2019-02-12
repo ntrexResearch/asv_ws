@@ -20,6 +20,7 @@ def get_key(setting):
 
 def key_loop():
     global pub
+    pub.publish(1)
     global rate
     setting = termios.tcgetattr(sys.stdin)
     while 1:
@@ -28,28 +29,40 @@ def key_loop():
             em_flag = Int8()
             em_flag.data = 1
             pub.publish(em_flag)
+	    print_current_emg(1)
         elif key == control_keys['space']:
             em_flag = Int8()
             em_flag.data = 0
             pub.publish(em_flag)
+            print_current_emg(0)
+	elif key == '\x03' or key == '\x71':  # ctr-c or q
+	    break
         else:
             continue
         rate.sleep()
 
 
-def emergency_node():
-    pub = rospy.Publisher('/asv_emergency', Int8, queue_size=10)
-    rospy.init_node('emergency_node')
-    rate = rospy.Rate(10)
+def print_current_emg(state):
+    rospy.loginfo('\x1b[1M\r*********************************************')
+    rospy.loginfo("\x1b[1M\rEmergency state : %d" % (state))
+    rospy.loginfo('\x1b[1M\r*********************************************')
+
+
+def print_state():
     rospy.loginfo('\x1b[1M\r*********************************************')
     rospy.loginfo("\x1b[1M\rASV emergency node activated")
+    rospy.loginfo('\x1b[1M\rUse Enter to enable emergency state')
+    rospy.loginfo('\x1b[1M\rUse Space to disable emergency states')
+    rospy.loginfo('\x1b[1M\rPress <ctrl-c> or <q> to exit')
     rospy.loginfo('\x1b[1M\r*********************************************')
-    while not rospy.is_shutdown():
-        key_loop()
 
 
 if __name__ == '__main__':
+    pub = rospy.Publisher('/mw/emg', Int8, queue_size=10)
+    rospy.init_node('emergency_node')
+    rate = rospy.Rate(10)
     try:
-        emergency_node()
+        print_state()
+	key_loop()
     except rospy.ROSInterruptException:
         pass

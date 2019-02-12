@@ -1,4 +1,4 @@
-image: /home/yeungnam/catkin_ws/src/asv/asv_navigation/maps/lab.pgm
+image: /home/ntrex/asv_workspace/src/asv/asv_navigation/maps/lab.pgm
 resolution: 0.050000
 origin: [-100.000000, -100.000000, 0.000000]
 negate: 0
