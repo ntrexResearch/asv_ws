@@ -34,6 +34,7 @@ from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 from ackermann_msgs.msg import AckermannDriveStamped
 from asv_mw.msg import Asv_state
 from definition import *
+from collections import deque
 
 # 로봇 구동부에 관한 정보를 기재한다.
 wheel_to_wheel_d = 0.56 # 바퀴와 바퀴 간 거리  [m]
@@ -133,11 +134,15 @@ def make_text_command(command_type, arg1=0.0, arg2=0.0):
     if command_type == 'Control Motion':
         return 'c=%d,%d\r\n' % (arg1, arg2)
     elif command_type == 'System Command':
-        return 'co1=%d;co2=%d\r\n' % (arg1, arg2)
+        return 'sc=%d\r\n' % (arg1)
     elif command_type == 'Poll Status':
         return 's\r\n'
     elif command_type == 'Emergency Control':
-        return 'emg=%d' % (arg1)
+        return 'emg=%d\r\n' % (arg1)
+    elif command_type == 'Distance Sensor Threshold':
+        return 'sfdst\r\n'
+    else:
+        return " "
 
 
 def on_new_ackermann(data):
@@ -149,23 +154,23 @@ def on_new_ackermann(data):
     """
     global mode
     global emergency_flag
-    global front_obstacle_flag
-    global rear_obstacle_flag
+    global fds_flag
+    global rds_flag
+    global steer_fault
     #if not auto_mode or emergency_flag or front_obstacle_flag or rear_obstacle_flag:
 
     lin_speed_limited = limit_lin_speed(data.drive.speed)
     steering_angle_degree = data.drive.steering_angle * degree_per_rad
     steering_angle_limited = limit_steering_angle(steering_angle_degree)
     lin_vel_rpm = int( lin_speed_limited * asv_ms_to_rpm )
-    
-    #if mode:
-    #    remote_tx_queue.put('c=0,0\r\n')
+    # mode 가 1 이면 자율주행 모드 0이면 수동주행을 의미한다.
+    # emergency_flag가 1이면 비상상태 0이면 정상을 의미한다.
+    # fds_flag 와 rds_flag는 1이면 장애물이 있는 상태 0이면 없는 상태를 의미한다.
+    if mode and not emergency_flag and not fds_flag and not rds_flag:
+        remote_tx_queue.put(make_text_command('Control Motion', lin_vel_rpm, int(steering_angle_limited)))
     # Check the status and then publish
-    #else:
-
-    #print("Command working")
-    #print(lin_vel_rpm, data.drive.speed, data.drive.steering_angle)
-    remote_tx_queue.put(make_text_command('Control Motion', lin_vel_rpm, int(steering_angle_limited)))
+    else:
+        remote_tx_queue.put(make_text_command('Control Motion', 0, 0))
 
 
 def on_new_cmd(data):
@@ -179,7 +184,7 @@ def on_new_cmd(data):
     :return: None
     """
     global remote_tx_queue
-    remote_tx_queue.put('co1='+ str(data.data)+';co2='+ str(data.data)+'\r\n')
+    remote_tx_queue.put(make_text_command('Steer Control', data.data))
 
 
 def on_new_emg(data):
@@ -191,6 +196,7 @@ def on_new_emg(data):
     """
     global remote_tx_queue
     remote_tx_queue.put(make_text_command('Emergency Control', data.data))
+
 
 def shutdownhook():
     """
@@ -212,6 +218,8 @@ if __name__ == "__main__":
     tx_queue = Queue.Queue()
     remote_tx_queue = Queue.Queue()
     rx_queue = Queue.Queue()
+    fds_deque = deque(maxlen=5)
+    rds_deque = deque(maxlen=5)
     asv_state_info = Asv_state()
     serialThread = DCUSerialThread(1, "DCU serial thread", remote_tx_queue,tx_queue, rx_queue, port)
     rate = rospy.Rate(20)
@@ -221,7 +229,7 @@ if __name__ == "__main__":
     publisher_asv_status = rospy.Publisher("/status", Asv_state, queue_size=1)
     publisher_mw_fault1 = rospy.Publisher("/mw/fault1", Int32, queue_size=10)
     publisher_mw_fault2 = rospy.Publisher("/mw/fault2", Int32, queue_size=10)
-    subscriber_cmd = rospy.Subscriber("mw/command", Int32, on_new_cmd, queue_size=10)
+    subscriber_cmd = rospy.Subscriber("mw/steer_command", Int32, on_new_cmd, queue_size=10)
     subscriber_ackermann = rospy.Subscriber("ackermann_cmd", AckermannDriveStamped, on_new_ackermann, queue_size=10)
     subscriber_emg = rospy.Subscriber("mw/emg", Int8, on_new_emg, queue_size=1)
 
@@ -249,15 +257,14 @@ if __name__ == "__main__":
             if message_type == "s":
                 status = int(rx_message[1])
                 steer_fault = (status >> 4)
-                print("steer", steer_fault )
                 mode = (status >> 3) & 0x1
                 emergency_flag = (status >> 2) & 0x1
-                fds_flag = (status >> 1) & 0x1
-                rds_flag = status & 0x1
-                print("mode", mode)
-                print("emergency", emergency_flag)
-                print("fds" , fds_flag)
-                print("rds", rds_flag)
+                fds_state = (status >> 1) & 0x1
+                rds_state = status & 0x1
+                fds_deque.append(fds_state)
+                rds_deque.append(rds_state)
+                fds_flag = int(sum(fds_deque)/len(fds_deque))
+                rds_flag = int(sum(rds_deque)/len(rds_deque))
                 asv_state_info.mode = mode
                 asv_state_info.emergency = emergency_flag
                 asv_state_info.front_obstacle = fds_flag
@@ -269,8 +276,9 @@ if __name__ == "__main__":
                 #    break
                 # when mode is 1, manual. when the mode is 0, it is auto.
                 #print(mode, emergency_flag)
-                if mode or emergency_flag: 
-                    break
+                # 오토 모드 가 아니거나 비상 상태시 odometry를
+                # if not mode or emergency_flag:
+                #     break
                 left_encoder = int(rx_message[2])
                 right_encoder = int(rx_message[3])
                 left_velocity = float(rx_message[4])
