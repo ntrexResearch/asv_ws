@@ -1,5 +1,5 @@
 <launch>
-	<arg name="serial_dev" default="/dev/ttyS0"/>
+	<arg name="serial_dev" default="/dev/ttyS1"/>
 	<node pkg="asv_mw" type="moonwalker_ahrs.py" name="imu_node" output="screen">
 		<param name="serial_dev" value="$(arg serial_dev)"/>
 	</node>
