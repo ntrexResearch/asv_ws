@@ -170,10 +170,10 @@ def on_new_ackermann(data):
     if mode and not emergency_flag: # and not fds_flag and not rds_flag:
         remote_tx_queue.put(make_text_command('Control Motion', lin_vel_rpm, int(steering_angle_limited)))
     # Check the status and then publish
-	elif fds_flag and lin_vel_rpm >= 0:	
-        remote_tx_queue.put(make_text_command('Control Motion', 0, int(steering_angle_limited)))
-	elif rds_flag and lin_vel_rpm <=0:
-        remote_tx_queue.put(make_text_command('Control Motion', 0, int(steering_angle_limited)))
+	elif fds_flag and (lin_vel_rpm >= 0):	
+		remote_tx_queue.put(make_text_command('Control Motion', 0, int(steering_angle_limited)))
+	elif rds_flag and (lin_vel_rpm <=0):
+		remote_tx_queue.put(make_text_command('Control Motion', 0, int(steering_angle_limited)))
     else:
         remote_tx_queue.put(make_text_command('Control Motion', 0, 0))
 
