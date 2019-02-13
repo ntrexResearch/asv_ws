@@ -57,9 +57,10 @@ min_encoder = -32768
 
 fault_flag = False
 index = 0
-# 1 means manual; 0 means auto
-mode = 1
-
+# 0 means manual; 1 means auto
+mode = 0
+emergency_flag = 0
+fds_flag = rds_flag = 0
 
 def init_odom():
     """
@@ -133,7 +134,7 @@ def make_text_command(command_type, arg1=0.0, arg2=0.0):
     """
     if command_type == 'Control Motion':
         return 'c=%d,%d\r\n' % (arg1, arg2)
-    elif command_type == 'System Command':
+    elif command_type == 'Steer Control':
         return 'sc=%d\r\n' % (arg1)
     elif command_type == 'Poll Status':
         return 's\r\n'
