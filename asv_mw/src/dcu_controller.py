@@ -136,6 +136,8 @@ def make_text_command(command_type, arg1=0.0, arg2=0.0):
         return 'co1=%d;co2=%d\r\n' % (arg1, arg2)
     elif command_type == 'Poll Status':
         return 's\r\n'
+    elif command_type == 'Emergency Control':
+        return 'emg=%d' % (arg1)
 
 
 def on_new_ackermann(data):
@@ -179,6 +181,16 @@ def on_new_cmd(data):
     global remote_tx_queue
     remote_tx_queue.put('co1='+ str(data.data)+';co2='+ str(data.data)+'\r\n')
 
+
+def on_new_emg(data):
+    """
+    이 함수는 mw/emg topic callback 함수이다.
+    emg 가 1이면 비상정지 상태를 의미하고 emg 가 0이면 normal상태를 의미한다.
+    :param data:
+    :return:
+    """
+    global remote_tx_queue
+    remote_tx_queue.put(make_text_command('Emergency Control', data.data))
 
 def shutdownhook():
     """
