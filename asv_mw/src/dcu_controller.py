@@ -168,12 +168,12 @@ def on_new_ackermann(data):
     # emergency_flag가 1이면 비상상태 0이면 정상을 의미한다.
     # fds_flag 와 rds_flag는 1이면 장애물이 있는 상태 0이면 없는 상태를 의미한다.
     if mode and not emergency_flag: # and not fds_flag and not rds_flag:
+        if fds_flag is 1 and lin_vel_rpm >= 0:
+            remote_tx_queue.put(make_text_command('Control Motion', 0, int(steering_angle_limited)))
+        elif rds_flag is 1 and lin_vel_rpm <= 0:
+            remote_tx_queue.put(make_text_command('Control Motion', 0, int(steering_angle_limited)))
         remote_tx_queue.put(make_text_command('Control Motion', lin_vel_rpm, int(steering_angle_limited)))
     # Check the status and then publish
-	elif fds_flag and (lin_vel_rpm >= 0):	
-		remote_tx_queue.put(make_text_command('Control Motion', 0, int(steering_angle_limited)))
-	elif rds_flag and (lin_vel_rpm <=0):
-		remote_tx_queue.put(make_text_command('Control Motion', 0, int(steering_angle_limited)))
     else:
         remote_tx_queue.put(make_text_command('Control Motion', 0, 0))
 
