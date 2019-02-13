@@ -24,7 +24,7 @@ import rospy
 import Queue
 
 from geometry_msgs.msg import Twist
-from std_msgs.msg import Float32, Int32, Int16
+from std_msgs.msg import Int32, Int8
 
 from serial_thread import DCUSerialThread,  queue_handler
 from math import sin, cos, pi
@@ -223,6 +223,7 @@ if __name__ == "__main__":
     publisher_mw_fault2 = rospy.Publisher("/mw/fault2", Int32, queue_size=10)
     subscriber_cmd = rospy.Subscriber("mw/command", Int32, on_new_cmd, queue_size=10)
     subscriber_ackermann = rospy.Subscriber("ackermann_cmd", AckermannDriveStamped, on_new_ackermann, queue_size=10)
+    subscriber_emg = rospy.Subscriber("mw/emg", Int8, on_new_emg, queue_size=1)
 
     odom_pub = rospy.Publisher("odom", Odometry, queue_size=50)
     odom_broadcaster = tf.TransformBroadcaster()
