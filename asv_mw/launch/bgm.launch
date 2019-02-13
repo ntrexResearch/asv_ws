@@ -1,0 +1,4 @@
+<launch>
+   <include file="$(find sound_play)/soundplay_node.launch"/>
+   <node pkg="asv_mw" type="bgm_node.py" name="bgm_node" output="screen"/>
+</launch>

@@ -32,6 +32,7 @@ import tf
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 from ackermann_msgs.msg import AckermannDriveStamped
+from asv_mw.msg import Asv_state
 from definition import *
 
 # 로봇 구동부에 관한 정보를 기재한다.
@@ -199,12 +200,13 @@ if __name__ == "__main__":
     tx_queue = Queue.Queue()
     remote_tx_queue = Queue.Queue()
     rx_queue = Queue.Queue()
+    asv_state_info = Asv_state()
     serialThread = DCUSerialThread(1, "DCU serial thread", remote_tx_queue,tx_queue, rx_queue, port)
     rate = rospy.Rate(20)
     # On shutdown stop the motor and close the serial port
     rospy.on_shutdown(shutdownhook)
 
-    publisher_driving_mode = rospy.Publisher("/mode", Int8, queue_size=1)
+    publisher_asv_status = rospy.Publisher("/status", Asv_state, queue_size=1)
     publisher_mw_fault1 = rospy.Publisher("/mw/fault1", Int32, queue_size=10)
     publisher_mw_fault2 = rospy.Publisher("/mw/fault2", Int32, queue_size=10)
     subscriber_cmd = rospy.Subscriber("mw/command", Int32, on_new_cmd, queue_size=10)
@@ -233,8 +235,21 @@ if __name__ == "__main__":
             message_type = rx_message[0]
             if message_type == "s":
                 status = int(rx_message[1])
-                mode = not((status >> 3) & 0x1)
-                emergency_flag = ((status >> 2) & 0x1)
+                steer_fault = (status >> 4)
+                print("steer", steer_fault )
+                mode = (status >> 3) & 0x1
+                emergency_flag = (status >> 2) & 0x1
+                fds_flag = (status >> 1) & 0x1
+                rds_flag = status & 0x1
+                print("mode", mode)
+                print("emergency", emergency_flag)
+                print("fds" , fds_flag)
+                print("rds", rds_flag)
+                asv_state_info.mode = mode
+                asv_state_info.emergency = emergency_flag
+                asv_state_info.front_obstacle = fds_flag
+                asv_state_info.rear_obstacle = rds_flag
+                publisher_asv_status.publish(asv_state_info)
                 # front_obstacle_flag = (status >> 1) & 0x1
                 # rear_obstacle_flag = status & 0x1
                 #if not auto_mode or emergency_flag: or front_obstacle_flag or rear_obstacle_flag:

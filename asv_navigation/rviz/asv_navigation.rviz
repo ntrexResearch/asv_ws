@@ -177,9 +177,9 @@ Visualization Manager:
       Queue Size: 10
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.0300000012
+      Size (m): 0.0649999976
       Style: Flat Squares
-      Topic: /scan1_filtered
+      Topic: /scan_multi
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -389,7 +389,7 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: 2.97000027
+      Angle: 6.34500313
       Class: rviz/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
@@ -399,11 +399,11 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Scale: 108.03849
+      Scale: 78.9489899
       Target Frame: <Fixed Frame>
       Value: TopDownOrtho (rviz)
-      X: -0.943800509
-      Y: 0.440010756
+      X: 3.65471292
+      Y: 0.572355688
     Saved: ~
 Window Geometry:
   Displays:

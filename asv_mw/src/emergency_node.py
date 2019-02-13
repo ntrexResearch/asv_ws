@@ -20,7 +20,6 @@ def get_key(setting):
 
 def key_loop():
     global pub
-    pub.publish(1)
     global rate
     setting = termios.tcgetattr(sys.stdin)
     while 1:
