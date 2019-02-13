@@ -38,7 +38,6 @@ def sound_play_client(volume=1.0):
     client.wait_for_server()
     sub = rospy.Subscriber('/status', Asv_state, state_cb)
 
-    print "Wav"
     goal = SoundRequestGoal()
     goal.sound_request.sound = SoundRequest.PLAY_FILE
     goal.sound_request.command = SoundRequest.PLAY_ONCE
@@ -49,9 +48,7 @@ def sound_play_client(volume=1.0):
     result = SoundRequestResult()
     while 1:
         client.wait_for_result()
-        print "test"
         result = client.get_result()
-        print "Now restarting the loop"
         if result.playing == False:
             client.send_goal(goal, feedback_cb=feedback_cb)
 
